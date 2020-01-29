@@ -1,0 +1,36 @@
+---
+title: "Regex"
+author: "Baris Uzel"
+date: "January 29, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Week 3 Assignment 
+
+##Breakdown of the mutate code
+### FORM: sub("Replace This", "With this", "From this")
+
+####Replace This
+\\w+ "replaces" the first word in the species column while (\\w) captures that word to refer back to later
+
+#### With this 
+\\1 now refers back to the word captured by (\\w) and takes the first letter to replace with what is commanded tin the first
+
+
+```{r}
+MyData <- read.csv("measurements.csv")
+library(dplyr)
+library(knitr)
+
+MyData <- mutate(MyData, Sp = sub("(\\w)\\w+", "\\1\\.", Species))
+names(MyData)
+
+NewData <- MyData %>% select(Sp, Limb.Width, unitsW, Limb.Length, unitsL)
+names(NewData)
+head(NewData)
+```
+
