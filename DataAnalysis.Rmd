@@ -1,0 +1,105 @@
+---
+title: "DataAnalysis"
+author: "Baris Uzel"
+date: "January 23, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Weekly Assignment -Week 3
+
+
+###Install Packages 
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+
+```
+##Prepare data with tidyverse
+```{r}
+MyData<- read.csv("measurements.csv", header = TRUE)
+
+MyData<- rename(MyData, spc = Species, wid = Limb.Width, wun = unitsW, len = Limb.Length, lun = unitsL)
+
+df <- MyData %>% mutate(wus = if_else(wun == "mm", wid*10, wid*1)) %>% mutate(lus = if_else(lun == "mm", len*10, len*1)) %>% mutate(vol = wus*lus)
+
+#Create a new column of imaginary binary categories
+
+wings <- rbinom(10,size=1,prob=0.5) 
+wings <- ifelse(wings > 0, "yes", "no")
+df$wings <- wings
+
+GrpSmr <- df %>% group_by(wings, vol, len, wid) %>% summarize(MeanVol=mean(vol), MeanLen=mean(len), MeanWid=mean(wid), SdV=sd(vol), SdL=sd(len), SdW=sd(wid)) #Nan Values received
+print(GrpSmr)
+
+GrpSmr <- df %>% group_by(wings, vol, len, wid) %>% summarize(MeanVol=mean(vol), MeanLen=mean(len), MeanWid=mean(wid))
+GrpSmr$SdVol <- sd(df$vol) #works
+GrpSmr$SdLen <- sd(df$len) 
+GrpSmr$SdWid <- sd(df$wid)
+print(GrpSmr)
+```
+
+
+
+###Plot Width x Length
+```{r}
+plot1 <- ggplot() +
+  geom_line(data = df, aes(x = lus, y = wus), size = I(0.5))
+plot1 <- plot1 +
+  labs(x = 'Width (cm)',
+       y = 'Length (cm)',
+       caption = "Figure 1: The relationship between limb length and width for above-average Arctic Mammals" ) +
+  ggtitle("Limb Width and Length of Arctic Mammals") 
+plot1 <- plot1 + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"), 
+        panel.background = element_rect(fill = "white", colour = "black", size = 0.5, linetype = "solid"),
+        plot.caption = element_text(hjust = 0, face = "italic"))
+print(plot1)
+```
+
+###Plot Width and Length for species above average volume
+```{r}
+mean(df$vol)
+df_above <- df %>% select(spc, wus, lus, vol) %>% mutate(graphed = if_else(vol> mean(vol), "yes", "no")) %>% filter(graphed == "yes")
+print(df_above)
+
+
+plot2 <- ggplot() +
+  geom_line(data = df_above, aes(x = lus, y = wus), size = I(0.5))
+plot2 <- plot2 +
+  labs(x = 'Width (cm)',
+       y = 'Length (cm)',
+       caption = "Figure 2:The relationship between limb length and width for above-average Arctic Mammals" ) +
+  ggtitle("Limb Width and Length of Arctic Mammals") 
+plot2 <- plot2 + 
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        plot.caption = element_text(hjust = 0, face = "italic"),
+              panel.background = element_rect(fill = "white", colour = "black", size = 0.5, linetype = "solid"))
+print(plot2)
+```
+
+```{r}
+df_below <- df %>% select(spc, wus, lus, vol) %>% mutate(graphed = if_else(vol> mean(vol), "yes", "no")) %>% filter(graphed == "no")
+print(df_below)
+```
+
+
+
+A table displaying Arctic mammalian species that have below average volume for the region
+
+
+Species| Volume (cm2)|
+----|----|
+lagopus|600|
+arctos|4046|
+alces|1212|
+dalli|10854|
+moschatus|1196|
+lutris|502|
+gulo|591|
+arcticus|7046|
+
